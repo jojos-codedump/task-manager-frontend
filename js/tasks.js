@@ -380,3 +380,12 @@ function _esc(str) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
+
+// ── Auto-refresh every 30 seconds ─────────────────────────────
+// Reloads tasks + triggers user.js and piechart.js to refresh too.
+document.addEventListener("auth:ready", () => {
+    setInterval(async () => {
+        await _loadTasks();
+        _dispatchUpdated();
+    }, 30_000);
+});
