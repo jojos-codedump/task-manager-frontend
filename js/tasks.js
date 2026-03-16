@@ -36,7 +36,8 @@ const CAT_META = {
 };
 
 // ── Module state ──────────────────────────────────────────────
-let _busy = false;   // prevents double-submit
+let _busy            = false;   // prevents double-submit
+let _initialLoadDone = false;   // skeletons only on first load
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -46,6 +47,12 @@ let _busy = false;   // prevents double-submit
 document.addEventListener("auth:ready", () => {
     _loadTasks();
     _wireAddTask();
+
+    // ── Silent background refresh every 30 s ──────────────────
+    // Only re-renders the DOM; does NOT dispatch tasks:updated so
+    // user.js and piechart.js are NOT triggered (they have their
+    // own refresh cadence via tasks:updated from real mutations).
+    setInterval(() => _loadTasks(/* silent= */ true), 30_000);
 });
 
 
@@ -53,21 +60,32 @@ document.addEventListener("auth:ready", () => {
 //  Load + render
 // ═══════════════════════════════════════════════════════════════
 
-async function _loadTasks() {
-    // Show skeletons while fetching
-    showSkeleton(tasksList, 3, "52px");
-    showSkeleton(deadlinesList, 2, "62px");
+/**
+ * @param {boolean} [silent=false]
+ *   true  → background poll: skip skeletons, skip tasks:updated dispatch
+ *   false → user-triggered or first load: show skeletons, dispatch update
+ */
+async function _loadTasks(silent = false) {
+    // Only show skeletons on the very first load
+    if (!silent && !_initialLoadDone) {
+        showSkeleton(tasksList, 3, "52px");
+        showSkeleton(deadlinesList, 2, "62px");
+    }
 
     let data;
     try {
         data = await listTasks();
     } catch (err) {
-        toastError("Failed to load tasks. Please refresh.");
-        showEmpty(tasksList, "⚠️", "Could not load tasks");
-        showEmpty(deadlinesList, "⚠️", "Could not load deadlines");
+        if (!silent) {
+            toastError("Failed to load tasks. Please refresh.");
+            showEmpty(tasksList, "⚠️", "Could not load tasks");
+            showEmpty(deadlinesList, "⚠️", "Could not load deadlines");
+        }
         console.error("[tasks] listTasks failed:", err);
         return;
     }
+
+    _initialLoadDone = true;
 
     _renderTasksPanel(data.grouped);
     _renderDeadlinesPanel(data.all);
@@ -380,12 +398,3 @@ function _esc(str) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
-
-// ── Auto-refresh every 30 seconds ─────────────────────────────
-// Reloads tasks + triggers user.js and piechart.js to refresh too.
-document.addEventListener("auth:ready", () => {
-    setInterval(async () => {
-        await _loadTasks();
-        _dispatchUpdated();
-    }, 5_000);
-});
