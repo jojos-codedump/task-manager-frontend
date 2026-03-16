@@ -515,6 +515,67 @@
     50%     { box-shadow: 0 0 14px var(--bar-glow); }
 }
 
+
+/* -- Tasks panel tab bar (Active / Completed) ---------------- */
+.tasks-tab-bar {
+    display: flex;
+    gap: 0.2rem;
+    margin-bottom: 0.9rem;
+    background: rgba(5,7,20,0.60);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--panel-sep);
+}
+
+.tasks-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.40rem 0.5rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.70rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(216,180,254,0.38);
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--radius-sm) - 3px);
+    cursor: pointer;
+    transition: color 0.18s, background 0.18s;
+}
+.tasks-tab:hover { color: rgba(216,180,254,0.70); }
+.tasks-tab--active {
+    background: rgba(139,92,246,0.18);
+    color: var(--p1);
+    box-shadow:
+        0 0 8px rgba(139,92,246,0.18),
+        inset 0 0 6px rgba(139,92,246,0.06);
+    text-shadow: 0 0 5px rgba(216,180,254,0.45);
+}
+
+.tasks-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: rgba(139,92,246,0.20);
+    border-radius: var(--radius-full);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--p1);
+    transition: background 0.2s;
+}
+.tasks-tab--active .tasks-tab-count {
+    background: rgba(168,85,247,0.35);
+    color: #fff;
+}
+
 /* -- Add task area ------------------------------------------- */
 .add-task-area {
     margin-top: 1.2rem;

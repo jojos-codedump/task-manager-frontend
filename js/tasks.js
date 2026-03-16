@@ -38,6 +38,9 @@ const CAT_META = {
 // ── Module state ──────────────────────────────────────────────
 let _busy            = false;   // prevents double-submit
 let _initialLoadDone = false;   // skeletons only on first load
+let _showCompleted   = false;   // which tab is active in the tasks panel
+let _lastGrouped     = null;    // cached from last fetch — lets tab clicks
+                                // re-render instantly without a network call
 
 // ── API base (for revision enrolment) ────────────────────────
 const _API_BASE = (
@@ -117,6 +120,7 @@ async function _loadTasks(silent = false) {
     }
 
     _initialLoadDone = true;
+    _lastGrouped = data.grouped;   // cache for instant tab switching
 
     _renderTasksPanel(data.grouped);
     _renderDeadlinesPanel(data.all);
@@ -126,28 +130,91 @@ async function _loadTasks(silent = false) {
 function _renderTasksPanel(grouped) {
     if (!tasksList) return;
 
-    // Count only non-done tasks for the badge
-    const activeTasks = Object.values(grouped)
-        .flat()
-        .filter(t => t.status !== "done");
+    // Split into active (todo/in_progress) and completed (done)
+    const activeTasks    = Object.values(grouped).flat().filter(t => t.status !== "done");
+    const completedTasks = Object.values(grouped).flat().filter(t => t.status === "done");
 
+    // Badge always shows active count
     updateBadge("tasks-badge", activeTasks.length);
 
-    // Filter to categories that have at least one task
-    const nonEmptyCats = Object.entries(grouped)
-        .filter(([, tasks]) => tasks.length > 0);
+    // ── Tab bar ───────────────────────────────────────────────
+    const tabBar = `
+        <div class="tasks-tab-bar" id="tasks-tab-bar">
+            <button class="tasks-tab${!_showCompleted ? " tasks-tab--active" : ""}"
+                    id="tab-active" data-tab="active"
+                    aria-selected="${!_showCompleted}">
+                Active
+                <span class="tasks-tab-count">${activeTasks.length}</span>
+            </button>
+            <button class="tasks-tab${_showCompleted ? " tasks-tab--active" : ""}"
+                    id="tab-completed" data-tab="completed"
+                    aria-selected="${_showCompleted}">
+                Completed
+                <span class="tasks-tab-count">${completedTasks.length}</span>
+            </button>
+        </div>`;
 
-    if (nonEmptyCats.length === 0) {
-        showEmpty(tasksList, "🎉", "No tasks yet — add one below!");
-        return;
+    if (!_showCompleted) {
+        // ── Active view ──────────────────────────────────────
+        const nonEmptyCats = Object.entries(grouped)
+            .map(([cat, tasks]) => [cat, tasks.filter(t => t.status !== "done")])
+            .filter(([, tasks]) => tasks.length > 0);
+
+        const bodyHTML = nonEmptyCats.length === 0
+            ? `<div class="panel-empty">
+                   <span class="panel-empty-icon" aria-hidden="true">🎉</span>
+                   <span>No tasks yet — add one below!</span>
+               </div>`
+            : nonEmptyCats.map(([cat, tasks]) => _categorySection(cat, tasks)).join("");
+
+        tasksList.innerHTML = tabBar + bodyHTML;
+    } else {
+        // ── Completed view ───────────────────────────────────
+        const bodyHTML = completedTasks.length === 0
+            ? `<div class="panel-empty">
+                   <span class="panel-empty-icon" aria-hidden="true">📭</span>
+                   <span>No completed tasks yet</span>
+               </div>`
+            : completedTasks.map(t => _completedItemHTML(t)).join("");
+
+        tasksList.innerHTML = tabBar + bodyHTML;
     }
 
-    tasksList.innerHTML = nonEmptyCats.map(([cat, tasks]) =>
-        _categorySection(cat, tasks)
-    ).join("");
+    // Wire tab clicks
+    tasksList.querySelectorAll(".tasks-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+            _showCompleted = btn.dataset.tab === "completed";
+            if (_lastGrouped) _renderTasksPanel(_lastGrouped);
+        });
+    });
 
-    // Wire action buttons (done + delete) after HTML is injected
+    // Wire action buttons after HTML is injected
     _bindTaskButtons();
+}
+
+// ── Completed task item — stripped down, delete only ─────────
+function _completedItemHTML(task) {
+    return `
+        <div class="task-item task-item--completed"
+             data-id="${task.id}"
+             data-category="${task.category}">
+            <div class="task-info">
+                <div class="task-title" style="opacity:0.55;text-decoration:line-through">
+                    ${_esc(task.title)}
+                </div>
+                <div class="task-meta">
+                    ${categoryBadgeHTML(task.category)}
+                    <span class="task-xp">+${task.xpValue} XP</span>
+                    <span style="font-size:0.60rem;color:var(--dl-ok)">✓ Done</span>
+                </div>
+            </div>
+            <div class="task-actions">
+                <button class="btn-danger task-delete-btn"
+                        data-id="${task.id}"
+                        aria-label="Delete '${_esc(task.title)}'"
+                        title="Delete">✕</button>
+            </div>
+        </div>`;
 }
 
 function _categorySection(cat, tasks) {
