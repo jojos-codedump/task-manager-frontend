@@ -39,6 +39,37 @@ const CAT_META = {
 let _busy            = false;   // prevents double-submit
 let _initialLoadDone = false;   // skeletons only on first load
 
+// ── API base (for revision enrolment) ────────────────────────
+const _API_BASE = (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+)
+    ? "http://localhost:8000"
+    : "https://task-manager-backend-unld.onrender.com";
+
+/**
+ * Enrol a just-completed task in the spaced-repetition schedule.
+ * Fire-and-forget — a failure here must NEVER block the task
+ * completion flow; we only show a soft warning toast if it errors.
+ *
+ * @param {string} taskId
+ */
+async function _startRevision(taskId) {
+    try {
+        const { getIdToken } = await import("./auth.js");
+        const token = await getIdToken();
+        await fetch(`${_API_BASE}/revisions/${taskId}/start`, {
+            method:  "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+        // Notify revision.js to refresh its panel
+        document.dispatchEvent(new CustomEvent("tasks:updated"));
+    } catch (err) {
+        // Soft warning — task is already marked done, revision is a bonus
+        console.warn("[tasks] startRevision failed (non-critical):", err);
+    }
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 //  Bootstrap — wait for auth then load
@@ -332,6 +363,8 @@ function _bindTaskButtons() {
             try {
                 await completeTask(id);
                 toastSuccess("Task completed! XP earned 🎉");
+                // Enrol in revision schedule — fire-and-forget
+                _startRevision(id);
                 await _loadTasks();
                 _dispatchUpdated();
             } catch (err) {

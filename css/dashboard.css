@@ -41,6 +41,7 @@
    ============================================================= */
 #tasks-panel.glass-card:hover,
 #deadlines-panel.glass-card:hover,
+#revision-panel.glass-card:hover,
 #user-profile.glass-card:hover {
     border-color: rgba(168,85,247,0.38);
     box-shadow:
@@ -61,7 +62,9 @@
 /* =============================================================
    LAYOUT GRID
    Desktop: 300px | 1fr | 1fr
-   Areas: clock/profile / tasks/deadlines / piechart(full)
+   Row 1: clock | profile (x2)
+   Row 2: tasks (x2) | deadlines
+   Row 3: revision | piechart (x2)
    ============================================================= */
 .dashboard-layout {
     display: grid;
@@ -69,18 +72,19 @@
     grid-template-areas:
         "clock    profile   profile"
         "tasks    tasks     deadlines"
-        "piechart piechart  piechart";
+        "revision piechart  piechart";
     gap: 1.2rem;
     margin-top: 1.3rem;
 }
 
 .panel { padding: 1.4rem; }
 
-#clock-panel    { grid-area: clock; }
-#user-profile   { grid-area: profile; }
-#tasks-panel    { grid-area: tasks; }
-#deadlines-panel{ grid-area: deadlines; }
-#piechart-panel { grid-area: piechart; }
+#clock-panel     { grid-area: clock; }
+#user-profile    { grid-area: profile; }
+#tasks-panel     { grid-area: tasks; }
+#deadlines-panel { grid-area: deadlines; }
+#revision-panel  { grid-area: revision; }
+#piechart-panel  { grid-area: piechart; }
 
 
 /* =============================================================
@@ -904,6 +908,164 @@
 #tasks-list::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.45); }
 
 
+
+/* =============================================================
+   REVISION PANEL
+   ============================================================= */
+
+/* Amber badge variant for the "due now" count */
+.panel-badge--amber {
+    background: rgba(251,191,36,0.12);
+    color: var(--dl-soon);
+    border-color: rgba(251,191,36,0.28);
+}
+
+/* Tab bar */
+.revision-tabs {
+    display: flex;
+    gap: 0.2rem;
+    margin-bottom: 0.9rem;
+    background: rgba(5,7,20,0.60);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--panel-sep);
+}
+
+.rev-tab {
+    flex: 1;
+    padding: 0.40rem 0.4rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.70rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: rgba(216,180,254,0.38);
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--radius-sm) - 3px);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: color 0.18s, background 0.18s;
+}
+.rev-tab:hover { color: rgba(216,180,254,0.70); }
+.rev-tab--active {
+    background: rgba(139,92,246,0.18);
+    color: var(--p1);
+    box-shadow:
+        0 0 8px rgba(139,92,246,0.18),
+        inset 0 0 6px rgba(139,92,246,0.06);
+    text-shadow: 0 0 5px rgba(216,180,254,0.45);
+}
+
+/* Scrollable list */
+.revision-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-height: 72px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+/* Revision items */
+.revision-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.85rem;
+    background: rgba(5,7,20,0.55);
+    border: 1px solid var(--panel-sep);
+    border-radius: var(--radius-sm);
+    animation: fadeInUp 0.28s var(--ease) both;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.revision-item:hover {
+    border-color: rgba(168,85,247,0.24);
+    box-shadow: 0 1px 10px rgba(139,92,246,0.08);
+}
+.revision-item--due {
+    border-left: 2px solid rgba(251,191,36,0.60);
+}
+.revision-item--done {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+.revision-item-info { flex: 1; min-width: 0; }
+.revision-item-title {
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+}
+.revision-item-due {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.60rem;
+    color: rgba(216,180,254,0.35);
+    margin-top: 0.15rem;
+    flex-wrap: wrap;
+}
+
+/* Stage chips on items */
+.rev-item-stage {
+    flex-shrink: 0;
+    font-size: 0.56rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+}
+.rev-item-stage--14  { background: rgba(139,92,246,0.18); color: var(--p1); border: 1px solid rgba(139,92,246,0.28); }
+.rev-item-stage--30  { background: rgba(168,85,247,0.13); color: var(--p2); border: 1px solid rgba(168,85,247,0.22); }
+.rev-item-stage--180 { background: rgba(216,180,254,0.10); color: var(--p0); border: 1px solid rgba(216,180,254,0.18); }
+.rev-item-stage--done{ background: rgba(52,211,153,0.10); color: #34d399; border: 1px solid rgba(52,211,153,0.22); }
+
+/* Advance button */
+.revision-item-btn {
+    flex-shrink: 0;
+    padding: 0.22rem 0.60rem !important;
+    font-size: 0.62rem !important;
+    border-radius: 5px !important;
+}
+
+/* Stage legend at the bottom */
+.revision-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--panel-sep);
+    flex-wrap: wrap;
+}
+.rev-stage-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.rev-stage-chip--14   { background: rgba(139,92,246,0.16); color: var(--p1); }
+.rev-stage-chip--30   { background: rgba(168,85,247,0.12); color: var(--p2); }
+.rev-stage-chip--180  { background: rgba(216,180,254,0.09); color: var(--p0); }
+.rev-stage-chip--done { background: rgba(148,163,184,0.08); color: rgba(216,180,254,0.35); }
+.rev-legend-arrow { font-size: 0.60rem; color: rgba(216,180,254,0.25); }
+
+/* Scrollbar */
+.revision-list::-webkit-scrollbar       { width: 3px; }
+.revision-list::-webkit-scrollbar-track { background: transparent; }
+.revision-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 2px; }
+.revision-list::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.45); }
+
 /* =============================================================
    RESPONSIVE  --  Breakpoints
    ============================================================= */
@@ -912,6 +1074,7 @@
 @media (hover: none) {
     #tasks-panel.glass-card:hover,
     #deadlines-panel.glass-card:hover,
+    #revision-panel.glass-card:hover,
     #piechart-panel.glass-card:hover,
     #user-profile.glass-card:hover {
         border-color: var(--panel-border);
@@ -927,7 +1090,7 @@
     .glass-card:hover .panel-header-line { width: 0%; }
 }
 
-/* 1100px: 2-col, tasks+deadlines in row 2, piechart full row 3 */
+/* 1100px: 2-col */
 @media (max-width: 1100px) {
     .dashboard-layout {
         grid-template-columns: 1fr 1fr;
@@ -935,6 +1098,7 @@
             "clock      profile"
             "tasks      tasks"
             "deadlines  deadlines"
+            "revision   revision"
             "piechart   piechart";
     }
 }
@@ -950,6 +1114,7 @@
             "profile"
             "tasks"
             "deadlines"
+            "revision"
             "piechart";
         gap: 1rem;
     }

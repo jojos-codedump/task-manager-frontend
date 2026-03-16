@@ -170,6 +170,48 @@
                 </div>
             </section>
 
+            <!-- ── ROW 3: Revision Queue ──────────────────────────── -->
+            <section class="panel glass-card panel--revision" id="revision-panel"
+                     aria-label="Revision queue">
+                <div class="panel-header">
+                    <span class="panel-icon" aria-hidden="true">🔁</span>
+                    <h2>Revision Queue</h2>
+                    <span class="panel-badge panel-badge--amber" id="revision-badge"
+                          aria-label="0 due">0</span>
+                    <div class="panel-header-line" aria-hidden="true"></div>
+                </div>
+                <div class="revision-tabs" role="tablist" aria-label="Revision filter">
+                    <button class="rev-tab rev-tab--active" role="tab" data-stage="due"
+                            id="tab-due" aria-selected="true"
+                            aria-controls="revision-list">Due Now</button>
+                    <button class="rev-tab" role="tab" data-stage="upcoming"
+                            id="tab-upcoming" aria-selected="false"
+                            aria-controls="revision-list">Upcoming</button>
+                    <button class="rev-tab" role="tab" data-stage="done"
+                            id="tab-done" aria-selected="false"
+                            aria-controls="revision-list">Done</button>
+                </div>
+                <!-- revision.js renders items here -->
+                <div id="revision-list" class="revision-list"
+                     role="tabpanel" aria-live="polite">
+                    <div class="shimmer"
+                         style="height:40px;margin-bottom:6px;border-radius:8px"
+                         aria-hidden="true"></div>
+                    <div class="shimmer"
+                         style="height:40px;border-radius:8px"
+                         aria-hidden="true"></div>
+                </div>
+                <div class="revision-legend" aria-label="Spaced repetition schedule">
+                    <span class="rev-stage-chip rev-stage-chip--14">14d</span>
+                    <span class="rev-legend-arrow" aria-hidden="true">→</span>
+                    <span class="rev-stage-chip rev-stage-chip--30">1mo</span>
+                    <span class="rev-legend-arrow" aria-hidden="true">→</span>
+                    <span class="rev-stage-chip rev-stage-chip--180">6mo</span>
+                    <span class="rev-legend-arrow" aria-hidden="true">→</span>
+                    <span class="rev-stage-chip rev-stage-chip--done">✓</span>
+                </div>
+            </section>
+
             <!-- ── ROW 3: XP Pie Chart ───────────────────────────── -->
             <section class="panel glass-card" id="piechart-panel"
                      aria-label="XP breakdown by category">
@@ -199,6 +241,7 @@
     <script type="module" src="js/tasks.js"></script>
     <script type="module" src="js/user.js"></script>
     <script type="module" src="js/piechart.js"></script>
+    <script type="module" src="js/revision.js"></script>
 
     <!-- ── Inline boot script ────────────────────────────────────
          Handles:
