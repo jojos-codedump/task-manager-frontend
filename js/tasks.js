@@ -387,5 +387,5 @@ document.addEventListener("auth:ready", () => {
     setInterval(async () => {
         await _loadTasks();
         _dispatchUpdated();
-    }, 30_000);
+    }, 5_000);
 });
