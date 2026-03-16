@@ -1,0 +1,426 @@
+/* =============================================================
+   BASE.CSS  --  Global tokens, reset, shared components
+   Task Manager Dashboard
+   ============================================================= */
+
+/* -- Box-sizing reset ---------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* -- Design tokens ------------------------------------------- */
+:root {
+    /* Purple family */
+    --p0: #f3e8ff;
+    --p1: #d8b4fe;
+    --p2: #a855f7;
+    --p3: #7c3aed;
+    --p4: #4c1d95;
+
+    /* Glows */
+    --glow-sm: 0 0 8px rgba(168,85,247,0.55), 0 0 20px rgba(168,85,247,0.2);
+    --glow-md: 0 0 12px rgba(168,85,247,0.7), 0 0 32px rgba(168,85,247,0.25);
+    --glow-lg: 0 0 20px rgba(168,85,247,0.8), 0 0 50px rgba(168,85,247,0.3);
+
+    /* Panel chrome */
+    --panel-bg:     rgba(6, 8, 22, 0.80);
+    --panel-border: rgba(139, 92, 246, 0.16);
+    --panel-sep:    rgba(139, 92, 246, 0.09);
+
+    /* Semantic urgency colours */
+    --dl-ok:      #34d399;
+    --dl-soon:    #fbbf24;
+    --dl-urgent:  #f87171;
+    --dl-overdue: #ef4444;
+
+    /* Category accent colours */
+    --cat-dsa:   #a855f7;
+    --cat-web:   #38bdf8;
+    --cat-cyber: #f87171;
+    --cat-gate:  #fbbf24;
+    --cat-gen:   rgba(216,180,254,0.45);
+
+    /* Typography */
+    --text:       rgba(226, 218, 255, 0.88);
+    --text-muted: rgba(216, 180, 254, 0.38);
+
+    /* Inputs */
+    --bg-input: rgba(8, 10, 28, 0.80);
+
+    /* Radii */
+    --radius-sm:   8px;
+    --radius-md:   12px;
+    --radius-lg:   18px;
+    --radius-full: 999px;
+
+    /* Easing */
+    --ease:        cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* -- Base ---------------------------------------------------- */
+html { scroll-behavior: smooth; }
+
+body {
+    background: #000;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* -- Global scrollbar ---------------------------------------- */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgba(139,92,246,0.22);
+    border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.42); }
+
+/* -- Header -------------------------------------------------- */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1.6rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(5, 7, 20, 0.94);
+    border-bottom: 1px solid rgba(139,92,246,0.22);
+    box-shadow: 0 1px 0 rgba(139,92,246,0.10), 0 6px 28px rgba(0,0,0,0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.brand-bolt {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 5px rgba(251,191,36,0.85));
+    animation: boltFlicker 5s ease-in-out infinite;
+}
+
+@keyframes boltFlicker {
+    0%,95%,100% { opacity: 1; }
+    96%         { opacity: 0.3; }
+    97.5%       { opacity: 1; }
+    99%         { opacity: 0.5; }
+}
+
+header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    background: linear-gradient(120deg, var(--p0) 0%, var(--p1) 45%, var(--p2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 6px rgba(52,211,153,0.9);
+    animation: livePulse 2.2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes livePulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%     { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* -- Glass card ---------------------------------------------- */
+.glass-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    box-shadow:
+        0 0 0 1px var(--panel-border),
+        0 6px 28px rgba(0,0,0,0.50),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+    transition:
+        border-color 0.3s var(--ease),
+        box-shadow   0.3s var(--ease),
+        transform    0.3s var(--ease);
+}
+
+/* -- Panel header -------------------------------------------- */
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--panel-sep);
+    position: relative;
+}
+
+.panel-header h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--p0);
+    flex: 1;
+}
+
+.panel-icon { font-size: 1rem; flex-shrink: 0; }
+
+.panel-header-line {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    height: 1px;
+    width: 0%;
+    background: linear-gradient(90deg, transparent, var(--p2) 40%, var(--p1) 100%);
+    box-shadow: 0 0 8px rgba(168,85,247,0.5);
+    transition: width 0.55s var(--ease);
+}
+.glass-card:hover .panel-header-line { width: 100%; }
+
+.panel-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: rgba(139,92,246,0.16);
+    color: var(--p1);
+    border: 1px solid rgba(139,92,246,0.30);
+    border-radius: var(--radius-full);
+    font-size: 0.60rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* -- Buttons ------------------------------------------------- */
+button { cursor: pointer; font-family: inherit; }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--p3), var(--p2));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.42rem 1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.80rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(139,92,246,0.30);
+    transition: box-shadow 0.2s, transform 0.18s var(--ease-spring), opacity 0.2s;
+}
+.btn-primary:hover  { box-shadow: var(--glow-md); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); opacity: 0.88; }
+
+.btn-ghost {
+    background: transparent;
+    color: rgba(216,180,254,0.55);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 0.38rem 0.9rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.80rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: color 0.2s, border-color 0.2s;
+}
+.btn-ghost:hover { color: var(--p1); border-color: rgba(139,92,246,0.28); }
+
+.btn-danger {
+    background: transparent;
+    color: rgba(248,113,113,0.65);
+    border: 1px solid rgba(248,113,113,0.22);
+    border-radius: var(--radius-sm);
+    padding: 0.26rem 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.btn-danger:hover {
+    color: #f87171;
+    border-color: rgba(248,113,113,0.50);
+    box-shadow: 0 0 8px rgba(248,113,113,0.18);
+}
+
+.btn-done {
+    background: transparent;
+    color: rgba(52,211,153,0.55);
+    border: 1px solid rgba(52,211,153,0.22);
+    border-radius: var(--radius-sm);
+    padding: 0.26rem 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.btn-done:hover {
+    color: #34d399;
+    border-color: rgba(52,211,153,0.45);
+    box-shadow: 0 0 8px rgba(52,211,153,0.18);
+}
+
+/* -- Inputs -------------------------------------------------- */
+input[type="text"],
+input[type="datetime-local"] {
+    background: var(--bg-input);
+    border: 1px solid rgba(139,92,246,0.18);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.84rem;
+    padding: 0.42rem 0.7rem;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]::placeholder { color: var(--text-muted); }
+input[type="text"]:focus,
+input[type="datetime-local"]:focus {
+    border-color: var(--p2);
+    box-shadow: 0 0 0 2px rgba(139,92,246,0.16), 0 0 10px rgba(139,92,246,0.10);
+}
+
+/* -- Category badges ----------------------------------------- */
+.badge {
+    display: inline-block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.60rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.08rem 0.45rem;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+.badge-DSA {
+    background: rgba(168,85,247,0.14);
+    color: var(--p1);
+    border: 1px solid rgba(168,85,247,0.28);
+}
+.badge-WebDev {
+    background: rgba(56,189,248,0.10);
+    color: #7dd3fc;
+    border: 1px solid rgba(56,189,248,0.22);
+}
+.badge-Cybersecurity {
+    background: rgba(248,113,113,0.10);
+    color: #fca5a5;
+    border: 1px solid rgba(248,113,113,0.22);
+}
+.badge-GATE {
+    background: rgba(251,191,36,0.10);
+    color: #fcd34d;
+    border: 1px solid rgba(251,191,36,0.22);
+}
+.badge-General {
+    background: rgba(216,180,254,0.08);
+    color: rgba(216,180,254,0.50);
+    border: 1px solid rgba(216,180,254,0.14);
+}
+
+/* -- Shimmer skeleton ---------------------------------------- */
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(139,92,246,0.06) 0%,
+        rgba(168,85,247,0.14) 45%,
+        rgba(139,92,246,0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmerAnim 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes shimmerAnim {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+
+/* -- Toast --------------------------------------------------- */
+#toast-container {
+    position: fixed;
+    bottom: 1.4rem;
+    right: 1.4rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(10,12,30,0.97);
+    border: 1px solid rgba(139,92,246,0.30);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 12px rgba(139,92,246,0.12);
+    animation: toastIn 0.28s var(--ease) both;
+    pointer-events: auto;
+    max-width: 320px;
+}
+.toast--success { border-color: rgba(52,211,153,0.40);  color: #34d399; }
+.toast--error   { border-color: rgba(248,113,113,0.40); color: #f87171; }
+.toast--warn    { border-color: rgba(251,191,36,0.40);  color: #fbbf24; }
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(18px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0)    scale(1);    }
+}
+
+/* -- Stagger entrance ---------------------------------------- */
+.stagger > * {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: staggerFadeUp 0.45s var(--ease) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger > *:nth-child(3) { animation-delay: 0.18s; }
+.stagger > *:nth-child(4) { animation-delay: 0.24s; }
+.stagger > *:nth-child(5) { animation-delay: 0.30s; }
+.stagger > *:nth-child(6) { animation-delay: 0.36s; }
+
+@keyframes staggerFadeUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* -- Shared keyframes ---------------------------------------- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes progressFill {
+    from { width: 0%; }
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* -- Reduced motion ------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration:  0.01ms !important;
+        transition-duration: 0.08ms !important;
+    }
+}

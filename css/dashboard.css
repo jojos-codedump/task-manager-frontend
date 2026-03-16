@@ -1,0 +1,1041 @@
+/* =============================================================
+   DASHBOARD.CSS  --  Layout, panels, responsive
+   Task Manager Dashboard
+   ============================================================= */
+
+/* -- Canvas + scanlines -------------------------------------- */
+#bg-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.025) 2px,
+        rgba(0,0,0,0.025) 4px
+    );
+}
+
+#app {
+    position: relative;
+    z-index: 2;
+    padding: 1.3rem 1.5rem 2.5rem;
+    max-width: 1320px;
+    margin: 0 auto;
+}
+
+
+/* =============================================================
+   GLASS CARD HOVER STATES
+   ============================================================= */
+#tasks-panel.glass-card:hover,
+#deadlines-panel.glass-card:hover,
+#user-profile.glass-card:hover {
+    border-color: rgba(168,85,247,0.38);
+    box-shadow:
+        0 0 0 1px rgba(168,85,247,0.28),
+        0 0 18px rgba(139,92,246,0.10),
+        0 10px 36px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+}
+
+#piechart-panel.glass-card:hover,
+#clock-panel.glass-card:hover {
+    border-color: rgba(168,85,247,0.28);
+    transform: none;
+}
+
+
+/* =============================================================
+   LAYOUT GRID
+   Desktop: 300px | 1fr | 1fr
+   Areas: clock/profile / tasks/deadlines / piechart(full)
+   ============================================================= */
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr 1fr;
+    grid-template-areas:
+        "clock    profile   profile"
+        "tasks    tasks     deadlines"
+        "piechart piechart  piechart";
+    gap: 1.2rem;
+    margin-top: 1.3rem;
+}
+
+.panel { padding: 1.4rem; }
+
+#clock-panel    { grid-area: clock; }
+#user-profile   { grid-area: profile; }
+#tasks-panel    { grid-area: tasks; }
+#deadlines-panel{ grid-area: deadlines; }
+#piechart-panel { grid-area: piechart; }
+
+
+/* =============================================================
+   CLOCK PANEL
+   ============================================================= */
+#clock-panel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 264px;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 85% 85% at 50% 50%,
+            rgba(139,92,246,0.10) 0%, transparent 72%),
+        var(--panel-bg) !important;
+}
+
+/* Rotating conic halo */
+#clock-panel::after {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        rgba(139,92,246,0.05) 20%,
+        transparent 45%,
+        rgba(168,85,247,0.03) 70%,
+        transparent 100%
+    );
+    animation: haloSpin 14s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes haloSpin { to { transform: rotate(360deg); } }
+
+/* Corner brackets */
+.corner-bracket {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+    z-index: 3;
+}
+.corner-bracket--tl { top:9px;  left:9px;  border-top:1.5px solid var(--p2); border-left:1.5px solid var(--p2); }
+.corner-bracket--tr { top:9px;  right:9px; border-top:1.5px solid var(--p1); border-right:1.5px solid var(--p1); }
+.corner-bracket--bl { bottom:9px; left:9px;  border-bottom:1.5px solid var(--p1); border-left:1.5px solid var(--p1); }
+.corner-bracket--br { bottom:9px; right:9px; border-bottom:1.5px solid var(--p2); border-right:1.5px solid var(--p2); }
+
+.clock-scene {
+    position: relative;
+    z-index: 2;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clock-sweep {
+    position: absolute;
+    inset: 0;
+    width: 200px;
+    height: 200px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+    z-index: 1;
+}
+.sweep-track {
+    fill: none;
+    stroke: rgba(139,92,246,0.09);
+    stroke-width: 1.5;
+}
+.sweep-arc {
+    fill: none;
+    stroke: var(--p2);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgba(168,85,247,0.9)) drop-shadow(0 0 12px rgba(139,92,246,0.4));
+    transition: stroke-dashoffset 0.95s linear;
+}
+
+/* Concentric rings */
+.clock-rings {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+.clock-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid transparent;
+}
+.clock-ring--h {
+    inset: 0;
+    border-color: rgba(168,85,247,0.20);
+    animation: ringRotate 43200s linear infinite;
+}
+.clock-ring--h::after {
+    content: '';
+    position: absolute;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--p2);
+    box-shadow: var(--glow-md);
+    top: -3.5px; left: 50%;
+    transform: translateX(-50%);
+}
+.clock-ring--m {
+    inset: 14px;
+    border-color: rgba(139,92,246,0.14);
+    animation: ringRotate 3600s linear infinite;
+}
+.clock-ring--m::after {
+    content: '';
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--p1);
+    box-shadow: var(--glow-sm);
+    top: -2.5px; left: 50%;
+    transform: translateX(-50%);
+}
+.clock-ring--s {
+    inset: 28px;
+    border-color: rgba(216,180,254,0.10);
+    animation: ringRotate 60s linear infinite;
+}
+.clock-ring--s::after {
+    content: '';
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--p0);
+    box-shadow: 0 0 6px rgba(243,232,255,0.8);
+    top: -2px; left: 50%;
+    transform: translateX(-50%);
+}
+@keyframes ringRotate { to { transform: rotate(360deg); } }
+
+.clock-display {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+}
+.clock-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    line-height: 1;
+    text-shadow:
+        0 0 8px rgba(168,85,247,0.95),
+        0 0 24px rgba(139,92,246,0.55),
+        0 0 52px rgba(139,92,246,0.18);
+}
+.clock-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--p1);
+    text-shadow: 0 0 8px rgba(216,180,254,0.6);
+}
+.clock-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.48rem;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(216,180,254,0.35);
+    margin-top: 3px;
+}
+
+
+/* =============================================================
+   PROFILE PANEL
+   ============================================================= */
+#user-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.7rem;
+}
+
+.stat-skeleton { height: 76px; border-radius: var(--radius-md); }
+
+.stat {
+    background: rgba(5,7,20,0.72);
+    border: 1px solid var(--panel-sep);
+    padding: 0.9rem 0.8rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+}
+.stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--p2), var(--p1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.stat:hover {
+    border-color: rgba(168,85,247,0.26);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 18px rgba(139,92,246,0.12);
+}
+.stat:hover::before { opacity: 1; }
+
+.stat-icon  { font-size: 1.3rem; margin-bottom: 0.35rem; }
+.stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    text-shadow: 0 0 10px rgba(168,85,247,0.55);
+}
+.stat-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: rgba(216,180,254,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 0.25rem;
+}
+
+/* XP bar row */
+.xp-bar-container {
+    margin-top: 0.7rem;
+    padding: 0.9rem 1rem;
+    background: rgba(5,7,20,0.65);
+    border: 1px solid var(--panel-sep);
+    border-radius: var(--radius-md);
+    grid-column: 1 / -1;
+}
+.xp-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: rgba(216,180,254,0.6);
+    margin-bottom: 0.45rem;
+}
+.xp-bar {
+    width: 100%;
+    height: 5px;
+    background: rgba(139,92,246,0.09);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--p3), var(--p2), var(--p1));
+    background-size: 200% 100%;
+    border-radius: 3px;
+    animation: progressFill 0.9s var(--ease) both, gradientShift 3.5s linear infinite;
+    transition: width 0.6s var(--ease);
+    box-shadow: 0 0 8px rgba(139,92,246,0.55);
+}
+@keyframes gradientShift {
+    0%   { background-position: 0%   50%; }
+    100% { background-position: 200% 50%; }
+}
+
+
+/* =============================================================
+   TASKS PANEL
+   ============================================================= */
+
+/* Category section headers (tasks.js groups by category) */
+.category-section { margin-bottom: 0.5rem; }
+
+.category-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.25rem 0 0.25rem 0;
+    margin-bottom: 0.35rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.category-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.cat-dot-DSA          { background: var(--cat-dsa); box-shadow: 0 0 5px rgba(168,85,247,0.7); }
+.cat-dot-WebDev       { background: var(--cat-web); box-shadow: 0 0 5px rgba(56,189,248,0.7); }
+.cat-dot-Cybersecurity{ background: var(--cat-cyber); box-shadow: 0 0 5px rgba(248,113,113,0.7); }
+.cat-dot-GATE         { background: var(--cat-gate); box-shadow: 0 0 5px rgba(251,191,36,0.7); }
+.cat-dot-General      { background: rgba(216,180,254,0.35); }
+
+/* Task items */
+.task-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    background: rgba(5,7,20,0.60);
+    border: 1px solid var(--panel-sep);
+    border-left: 2px solid rgba(139,92,246,0.28);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.42rem;
+    transition: border-color 0.22s, box-shadow 0.22s, border-left-color 0.22s;
+    animation: fadeInUp 0.28s var(--ease) both;
+    position: relative;
+    overflow: hidden;
+}
+.task-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(139,92,246,0.025), transparent 60%);
+    pointer-events: none;
+}
+.task-item:hover {
+    border-color: rgba(168,85,247,0.28);
+    border-left-color: var(--p2);
+    box-shadow: 0 2px 14px rgba(139,92,246,0.09);
+}
+/* Task left border colour per category */
+.task-item[data-category="DSA"]           { border-left-color: rgba(168,85,247,0.45); }
+.task-item[data-category="WebDev"]        { border-left-color: rgba(56,189,248,0.40); }
+.task-item[data-category="Cybersecurity"] { border-left-color: rgba(248,113,113,0.40); }
+.task-item[data-category="GATE"]          { border-left-color: rgba(251,191,36,0.40); }
+.task-item[data-category="General"]       { border-left-color: rgba(216,180,254,0.22); }
+
+/* Overdue row highlight */
+.task-item[data-urgency="overdue"] {
+    border-color: rgba(239,68,68,0.22);
+    background: rgba(239,68,68,0.04);
+}
+
+.task-info  { flex: 1; min-width: 0; }
+.task-title {
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.18rem;
+    flex-wrap: wrap;
+}
+.task-xp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--p1);
+    text-shadow: 0 0 5px rgba(216,180,254,0.4);
+}
+
+.task-actions {
+    display: flex;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    align-self: center;
+}
+.task-actions button { padding: 0.26rem 0.52rem; font-size: 0.68rem; border-radius: 5px; }
+
+#tasks-list p {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 1.4rem;
+    font-size: 0.82rem;
+}
+
+/* Deadline progress bar inside task item */
+.task-deadline-bar {
+    position: relative;
+    margin-top: 0.42rem;
+    height: 3px;
+    background: rgba(139,92,246,0.10);
+    border-radius: 2px;
+    overflow: visible;
+}
+.task-deadline-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: calc(var(--pct, 0) * 1%);
+    border-radius: 2px;
+    background: var(--bar-color, var(--p2));
+    box-shadow: 0 0 6px var(--bar-glow, rgba(168,85,247,0.6));
+    transition: width 1s var(--ease), background 1.2s, box-shadow 1.2s;
+}
+.task-deadline-label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--bar-color, rgba(216,180,254,0.55));
+    margin-top: 0.28rem;
+    transition: color 1.2s;
+}
+.task-deadline-bar[data-urgency="ok"]      { --bar-color: var(--p2);       --bar-glow: rgba(168,85,247,0.55); }
+.task-deadline-bar[data-urgency="soon"]    { --bar-color: var(--dl-soon);  --bar-glow: rgba(251,191,36,0.55); }
+.task-deadline-bar[data-urgency="urgent"]  { --bar-color: var(--dl-urgent);--bar-glow: rgba(248,113,113,0.55); }
+.task-deadline-bar[data-urgency="overdue"] { --bar-color: var(--dl-overdue);--bar-glow: rgba(239,68,68,0.55); }
+.task-deadline-bar[data-urgency="urgent"]  .task-deadline-fill,
+.task-deadline-bar[data-urgency="overdue"] .task-deadline-fill { animation: barPulse 1.5s ease-in-out infinite; }
+@keyframes barPulse {
+    0%,100% { box-shadow: 0 0 5px var(--bar-glow); }
+    50%     { box-shadow: 0 0 14px var(--bar-glow); }
+}
+
+/* -- Add task area ------------------------------------------- */
+.add-task-area {
+    margin-top: 1.2rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--panel-sep);
+}
+
+.add-task-row {
+    display: flex;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+}
+.add-task-row input   { flex: 1; }
+.add-task-row button  { flex-shrink: 0; white-space: nowrap; }
+
+/* Category select row -- always visible (no AI toggle in this app) */
+.category-select-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 0.7rem;
+    background: rgba(139,92,246,0.04);
+    border: 1px solid rgba(139,92,246,0.14);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.55rem;
+}
+
+.category-label {
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.70rem;
+    font-weight: 600;
+    color: rgba(216,180,254,0.7);
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+}
+
+.category-select {
+    flex: 1;
+    background-color: #0d0f20;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a855f7' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    border: 1px solid rgba(139,92,246,0.22);
+    border-radius: var(--radius-sm);
+    color: var(--p1);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.38rem 1.9rem 0.38rem 0.65rem;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    color-scheme: dark;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.category-select:focus {
+    border-color: var(--p2);
+    box-shadow: 0 0 0 2px rgba(139,92,246,0.18), 0 0 10px rgba(139,92,246,0.12);
+}
+.category-select option {
+    background-color: #0d0f20;
+    color: #d8b4fe;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+}
+
+/* Deadline picker row -- slides in when title is typed */
+.deadline-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(139,92,246,0.04);
+    border: 0px solid rgba(139,92,246,0.14);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    transition:
+        max-height 0.32s var(--ease),
+        opacity    0.28s var(--ease),
+        padding    0.28s,
+        border-width 0.28s;
+}
+.deadline-input-row.visible {
+    max-height: 52px;
+    opacity: 1;
+    padding: 0.45rem 0.7rem;
+    border-width: 1px;
+}
+
+.deadline-input-label {
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.70rem;
+    font-weight: 600;
+    color: rgba(216,180,254,0.7);
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+}
+
+.deadline-picker {
+    flex: 1;
+    width: auto;
+    background: var(--bg-input);
+    border: 1px solid rgba(139,92,246,0.18);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    padding: 0.32rem 0.55rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.deadline-picker:focus {
+    border-color: var(--p2);
+    box-shadow: 0 0 0 2px rgba(139,92,246,0.18), 0 0 10px rgba(139,92,246,0.12);
+}
+.deadline-picker::-webkit-calendar-picker-indicator {
+    filter: invert(0.45) sepia(1) hue-rotate(230deg) saturate(1.5);
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+/* Add button */
+#add-task-btn {
+    background: linear-gradient(135deg, var(--p3), var(--p2));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.42rem 1.1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.80rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    box-shadow: 0 0 10px rgba(139,92,246,0.28);
+    transition: box-shadow 0.2s, transform 0.18s var(--ease-spring);
+}
+#add-task-btn:hover  { box-shadow: var(--glow-md); transform: translateY(-1px); }
+#add-task-btn:active { transform: translateY(0); }
+
+
+/* =============================================================
+   DEADLINES PANEL
+   ============================================================= */
+#deadlines-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.deadlines-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 1.8rem;
+    color: rgba(216,180,254,0.30);
+    font-size: 0.78rem;
+}
+.deadlines-empty-icon { font-size: 1.6rem; opacity: 0.6; }
+
+.deadline-item {
+    position: relative;
+    padding: 0.7rem 0.85rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(148,163,184,0.07);
+    background: rgba(5,7,20,0.62);
+    overflow: hidden;
+    animation: fadeInUp 0.32s var(--ease) both;
+    transition: border-color 0.28s;
+}
+.deadline-item:hover { border-color: rgba(168,85,247,0.20); }
+
+/* Liquid fill bar */
+.deadline-item::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: calc(var(--pct, 0) * 1%);
+    height: 2.5px;
+    border-radius: 0 2px 2px 0;
+    background: var(--dl-color, var(--p2));
+    box-shadow: 0 0 8px var(--dl-glow, rgba(168,85,247,0.55));
+    transition: width 1s var(--ease), background 1.2s;
+}
+.deadline-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: calc(var(--pct, 0) * 1%);
+    height: 7px;
+    background: var(--dl-color, var(--p2));
+    opacity: 0.12;
+    border-radius: 0 4px 4px 0;
+    filter: blur(4px);
+    transition: width 1s var(--ease);
+    animation: liquidBlob 3s ease-in-out infinite;
+}
+@keyframes liquidBlob {
+    0%,100% { transform: scaleY(1); }
+    50%     { transform: scaleY(1.7) translateY(-0.5px); }
+}
+
+/* Urgency states */
+.deadline-item[data-urgency="ok"]      { --dl-color: var(--dl-ok);     --dl-glow: rgba(52,211,153,0.55); }
+.deadline-item[data-urgency="soon"]    { --dl-color: var(--dl-soon);   --dl-glow: rgba(251,191,36,0.55); }
+.deadline-item[data-urgency="urgent"]  { --dl-color: var(--dl-urgent); --dl-glow: rgba(248,113,113,0.55); border-color: rgba(248,113,113,0.16); }
+.deadline-item[data-urgency="overdue"] { --dl-color: var(--dl-overdue);--dl-glow: rgba(239,68,68,0.55);   border-color: rgba(239,68,68,0.20); }
+.deadline-item[data-urgency="urgent"]::before,
+.deadline-item[data-urgency="overdue"]::before { animation: urgentPulse 1.4s ease-in-out infinite; }
+@keyframes urgentPulse {
+    0%,100% { box-shadow: 0 0 5px  var(--dl-glow); }
+    50%     { box-shadow: 0 0 16px var(--dl-glow); }
+}
+
+.deadline-title {
+    font-size: 0.80rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}
+.deadline-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+.deadline-time-left {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--dl-color, var(--p2));
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 5px var(--dl-glow, transparent);
+    transition: color 1.2s;
+}
+.deadline-category-chip {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.08rem 0.42rem;
+    border-radius: var(--radius-full);
+    background: rgba(139,92,246,0.12);
+    color: var(--p1);
+    border: 1px solid rgba(139,92,246,0.22);
+    flex-shrink: 0;
+}
+
+/* Deadlines panel scrollbar */
+#deadlines-list::-webkit-scrollbar       { width: 3px; }
+#deadlines-list::-webkit-scrollbar-track { background: transparent; }
+#deadlines-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 2px; }
+#deadlines-list::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.45); }
+
+
+/* =============================================================
+   XP PIE CHART PANEL
+   ============================================================= */
+#piechart-panel {
+    background:
+        radial-gradient(ellipse 60% 90% at 20% 50%,
+            rgba(139,92,246,0.06) 0%, transparent 65%),
+        var(--panel-bg);
+}
+
+.piechart-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    padding: 0.5rem 0;
+}
+
+/* Donut chart wrapper -- keeps 1:1 aspect */
+.pie-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 200px;
+    height: 200px;
+}
+.pie-wrap canvas {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+/* Centre label overlaying the donut hole */
+.pie-centre {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.pie-centre-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(168,85,247,0.7), 0 0 26px rgba(139,92,246,0.35);
+}
+.pie-centre-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.60rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(216,180,254,0.40);
+    margin-top: 3px;
+}
+
+/* Legend */
+.pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 180px;
+}
+
+.pie-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.pie-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.pie-legend-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    flex: 1;
+}
+.pie-legend-xp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--p1);
+    flex-shrink: 0;
+}
+.pie-legend-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.60rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 34px;
+    text-align: right;
+}
+
+.pie-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.8rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    text-align: center;
+    width: 100%;
+}
+.pie-empty-icon { font-size: 1.8rem; opacity: 0.5; }
+
+/* Tasks list scrollbar */
+#tasks-list::-webkit-scrollbar       { width: 3px; }
+#tasks-list::-webkit-scrollbar-track { background: transparent; }
+#tasks-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 2px; }
+#tasks-list::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.45); }
+
+
+/* =============================================================
+   RESPONSIVE  --  Breakpoints
+   ============================================================= */
+
+/* Touch: disable hover lifts */
+@media (hover: none) {
+    #tasks-panel.glass-card:hover,
+    #deadlines-panel.glass-card:hover,
+    #piechart-panel.glass-card:hover,
+    #user-profile.glass-card:hover {
+        border-color: var(--panel-border);
+        box-shadow:
+            0 0 0 1px var(--panel-border),
+            0 6px 28px rgba(0,0,0,0.50),
+            inset 0 1px 0 rgba(255,255,255,0.03);
+        transform: none;
+    }
+    #clock-panel.glass-card:hover { border-color: var(--panel-border); transform: none; }
+    .stat:hover { border-color: var(--panel-sep); transform: none; box-shadow: none; }
+    .stat:hover::before { opacity: 0; }
+    .glass-card:hover .panel-header-line { width: 0%; }
+}
+
+/* 1100px: 2-col, tasks+deadlines in row 2, piechart full row 3 */
+@media (max-width: 1100px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "clock      profile"
+            "tasks      tasks"
+            "deadlines  deadlines"
+            "piechart   piechart";
+    }
+}
+
+/* 768px: single column */
+@media (max-width: 768px) {
+    #app { padding: 1rem 1rem 2rem; }
+
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "clock"
+            "profile"
+            "tasks"
+            "deadlines"
+            "piechart";
+        gap: 1rem;
+    }
+
+    /* Lift scroll jails on mobile */
+    #deadlines-list { max-height: none; overflow-y: visible; }
+
+    #user-stats  { grid-template-columns: repeat(2, 1fr); }
+
+    /* Add-task row stacks */
+    .add-task-row {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .add-task-row button {
+        align-self: flex-end;
+        min-width: 96px;
+        min-height: 44px;
+    }
+
+    /* Pie chart: stack vertically on tablet */
+    .piechart-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .pie-wrap { width: 180px; height: 180px; }
+    .pie-wrap canvas { width: 180px !important; height: 180px !important; }
+    .pie-legend { min-width: unset; width: 100%; }
+
+    /* iOS zoom prevention */
+    #new-task-title,
+    .deadline-picker,
+    .category-select { font-size: 1rem; }
+
+    /* Touch targets */
+    .category-select { min-height: 44px; }
+    .deadline-input-row.visible { max-height: 80px; }
+    .task-actions button { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+
+    /* Clock */
+    #clock-panel { min-height: 220px; }
+    .clock-time  { font-size: 1.85rem; }
+    .clock-scene, .clock-sweep { width: 176px; height: 176px; }
+
+    header h1 { font-size: 0.88rem; }
+
+    /* Deadline picker dark-mode fix */
+    .deadline-picker {
+        -webkit-appearance: none;
+        appearance: none;
+        color-scheme: dark;
+    }
+    .deadline-picker::-webkit-calendar-picker-indicator { width: 20px; height: 20px; opacity: 0.75; }
+}
+
+/* 480px: phone */
+@media (max-width: 480px) {
+    .panel { padding: 0.9rem; }
+
+    .clock-time  { font-size: 1.55rem; }
+    .clock-scene, .clock-sweep { width: 150px; height: 150px; }
+    .clock-label { font-size: 0.42rem; letter-spacing: 0.16em; }
+
+    #user-stats  { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .stat-value  { font-size: 1.05rem; }
+    .stat        { padding: 0.7rem 0.5rem; }
+
+    .brand-bolt { display: none; }
+
+    /* Task items stack vertically on narrow phones */
+    .task-item  { flex-direction: column; gap: 0.5rem; padding: 0.65rem 0.75rem; }
+    .task-actions { align-self: flex-end; }
+    .task-title { white-space: normal; overflow: visible; text-overflow: unset; }
+
+    .deadline-meta { flex-wrap: wrap; }
+
+    #new-task-title,
+    .deadline-picker,
+    .category-select { font-size: 1rem; }
+
+    #add-task-btn { min-height: 44px; padding: 0 1.2rem; }
+
+    #deadlines-list { max-height: none; overflow-y: visible; }
+
+    /* Pie chart smaller on phone */
+    .pie-wrap { width: 160px; height: 160px; }
+    .pie-wrap canvas { width: 160px !important; height: 160px !important; }
+    .pie-centre-value { font-size: 1.2rem; }
+}

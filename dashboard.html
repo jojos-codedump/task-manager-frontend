@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Task Manager — Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Matrix background (DO NOT TOUCH) -->
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <!-- Toast container (ui.js populates) -->
+    <div id="toast-container" role="alert" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="app">
+
+        <!-- ── Header: brand + logout only (no navbar) ─────────── -->
+        <header role="banner">
+            <div class="header-brand">
+                <span class="brand-bolt" aria-hidden="true">⚡</span>
+                <h1>Dashboard</h1>
+                <span class="live-dot" title="Connected" aria-label="Connected"></span>
+            </div>
+            <button id="logout-btn" class="btn-ghost" aria-label="Log out">Logout</button>
+        </header>
+
+        <main class="dashboard-layout stagger" role="main">
+
+            <!-- ── ROW 1: Clock ─────────────────────────────────── -->
+            <section class="panel glass-card panel--clock" id="clock-panel"
+                     aria-label="Current time">
+                <i class="corner-bracket corner-bracket--tl" aria-hidden="true"></i>
+                <i class="corner-bracket corner-bracket--tr" aria-hidden="true"></i>
+                <i class="corner-bracket corner-bracket--bl" aria-hidden="true"></i>
+                <i class="corner-bracket corner-bracket--br" aria-hidden="true"></i>
+                <div class="clock-scene">
+                    <div class="clock-rings" aria-hidden="true">
+                        <div class="clock-ring clock-ring--h"></div>
+                        <div class="clock-ring clock-ring--m"></div>
+                        <div class="clock-ring clock-ring--s"></div>
+                    </div>
+                    <svg class="clock-sweep" viewBox="0 0 200 200" aria-hidden="true">
+                        <circle class="sweep-track" cx="100" cy="100" r="88" />
+                        <circle class="sweep-arc"   cx="100" cy="100" r="88"
+                                id="sweep-arc"
+                                stroke-dasharray="553"
+                                stroke-dashoffset="553" />
+                    </svg>
+                    <div class="clock-display">
+                        <time class="clock-time" id="clock-time" datetime="">00:00:00</time>
+                        <div class="clock-date"  id="clock-date">—</div>
+                        <div class="clock-label" aria-hidden="true">◈ LOCAL TIME ◈</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── ROW 1: Profile ───────────────────────────────── -->
+            <section class="panel glass-card" id="user-profile" aria-label="User profile">
+                <div class="panel-header">
+                    <span class="panel-icon" aria-hidden="true">📊</span>
+                    <h2>Profile</h2>
+                    <div class="panel-header-line" aria-hidden="true"></div>
+                </div>
+                <!-- user.js renders stat cards + xp bar here -->
+                <div id="user-stats" aria-live="polite">
+                    <div class="stat-skeleton shimmer" aria-hidden="true"
+                         style="height:76px;border-radius:12px"></div>
+                    <div class="stat-skeleton shimmer" aria-hidden="true"
+                         style="height:76px;border-radius:12px"></div>
+                    <div class="stat-skeleton shimmer" aria-hidden="true"
+                         style="height:76px;border-radius:12px"></div>
+                    <div class="stat-skeleton shimmer" aria-hidden="true"
+                         style="height:76px;border-radius:12px"></div>
+                </div>
+            </section>
+
+            <!-- ── ROW 2: Tasks ──────────────────────────────────── -->
+            <section class="panel glass-card" id="tasks-panel" aria-label="Active tasks">
+                <div class="panel-header">
+                    <span class="panel-icon" aria-hidden="true">🎯</span>
+                    <h2>Active Tasks</h2>
+                    <span class="panel-badge" id="tasks-badge" aria-label="0 tasks">0</span>
+                    <div class="panel-header-line" aria-hidden="true"></div>
+                </div>
+
+                <!-- tasks.js renders grouped task items here -->
+                <div id="tasks-list" aria-live="polite" aria-label="Task list">
+                    <div class="shimmer"
+                         style="height:48px;margin-bottom:8px;border-radius:8px"
+                         aria-hidden="true"></div>
+                    <div class="shimmer"
+                         style="height:48px;border-radius:8px"
+                         aria-hidden="true"></div>
+                </div>
+
+                <!-- Add task area -->
+                <div class="add-task-area">
+
+                    <!-- Category select — always visible, matches backend CategoryType -->
+                    <div class="category-select-row" id="category-select-row">
+                        <label class="category-label" for="new-task-category">
+                            <span aria-hidden="true">🏷️</span> Category
+                        </label>
+                        <select id="new-task-category" class="category-select"
+                                aria-label="Task category">
+                            <option value="DSA">🧩 DSA</option>
+                            <option value="WebDev">💻 WebDev</option>
+                            <option value="Cybersecurity">🔒 Cybersecurity</option>
+                            <option value="GATE">📐 GATE</option>
+                            <option value="General" selected>📋 General</option>
+                        </select>
+                    </div>
+
+                    <!-- Title + add button -->
+                    <div class="add-task-row">
+                        <input type="text" id="new-task-title"
+                               placeholder="Enter a task title..."
+                               autocomplete="off" spellcheck="false"
+                               aria-label="New task title">
+                        <button id="add-task-btn" class="btn-primary"
+                                aria-label="Add task">+ Add</button>
+                    </div>
+
+                    <!-- Deadline row — slides in when user starts typing -->
+                    <div class="deadline-input-row" id="deadline-input-row"
+                         aria-hidden="true">
+                        <label class="deadline-input-label" for="new-task-deadline">
+                            <span aria-hidden="true">⏰</span> Deadline
+                        </label>
+                        <input type="datetime-local" id="new-task-deadline"
+                               class="deadline-picker"
+                               aria-label="Task deadline">
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ── ROW 2: Deadlines ──────────────────────────────── -->
+            <section class="panel glass-card panel--deadlines" id="deadlines-panel"
+                     aria-label="Upcoming deadlines">
+                <div class="panel-header">
+                    <span class="panel-icon" aria-hidden="true">⏳</span>
+                    <h2>Deadlines</h2>
+                    <span class="panel-badge" id="deadlines-badge"
+                          aria-label="0 deadlines">0</span>
+                    <div class="panel-header-line" aria-hidden="true"></div>
+                </div>
+                <!-- tasks.js populates this list -->
+                <div id="deadlines-list" aria-live="polite">
+                    <div class="deadlines-empty" id="deadlines-empty">
+                        <span class="deadlines-empty-icon" aria-hidden="true">🏖️</span>
+                        <span>No upcoming deadlines</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── ROW 3: XP Pie Chart ───────────────────────────── -->
+            <section class="panel glass-card" id="piechart-panel"
+                     aria-label="XP breakdown by category">
+                <div class="panel-header">
+                    <span class="panel-icon" aria-hidden="true">📈</span>
+                    <h2>XP Breakdown</h2>
+                    <div class="panel-header-line" aria-hidden="true"></div>
+                </div>
+                <!-- piechart.js renders chart + legend here -->
+                <div class="piechart-layout" id="piechart-layout">
+                    <div class="pie-empty" id="pie-empty">
+                        <span class="pie-empty-icon" aria-hidden="true">📊</span>
+                        <span>Complete tasks to earn XP</span>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div><!-- /#app -->
+
+
+    <!-- ── JS modules (load order matters) ──────────────────────── -->
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/tasks.js"></script>
+    <script type="module" src="js/user.js"></script>
+    <script type="module" src="js/piechart.js"></script>
+
+    <!-- ── Inline boot script ────────────────────────────────────
+         Handles:
+           1. Deadline row slide-in when task title is typed
+           2. Matrix background animation
+         Neither touches module state — safe to run immediately.
+    ─────────────────────────────────────────────────────────────── -->
+    <script>
+        (() => {
+            'use strict';
+
+            /* -- Deadline row: slide in when title is typed ----- */
+            const taskInp     = document.getElementById('new-task-title');
+            const deadlineRow = document.getElementById('deadline-input-row');
+
+            taskInp?.addEventListener('input', () => {
+                const hasText = taskInp.value.trim().length > 0;
+                deadlineRow?.classList.toggle('visible', hasText);
+                deadlineRow?.setAttribute('aria-hidden', String(!hasText));
+            });
+
+            /* ════════════════════════════════════════════════════════
+               MATRIX BACKGROUND — explicit per-column trail
+               DO NOT MODIFY THIS BLOCK
+            ════════════════════════════════════════════════════════ */
+            (() => {
+                const canvas = document.getElementById('bg-canvas');
+                if (!canvas) return;
+
+                const ctx = canvas.getContext('2d', { alpha: false });
+                const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+                let W, H;
+
+                const FONT       = 22;
+                const DROP_SPEED = 0.07;
+                const TRAIL_LEN  = 12;
+                const HEAD_BLUR  = 12;
+
+                const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモラリルレロワヲン01';
+                const isMobile = () => W <= 600;
+
+                let columns = [];
+
+                function initCols() {
+                    const n = Math.floor(W / FONT);
+                    columns = Array.from({ length: n }, () => ({
+                        pos:   -(Math.random() * (H / FONT) * 1.8),
+                        speed: DROP_SPEED * (0.75 + Math.random() * 0.50),
+                        chars: Array.from({ length: TRAIL_LEN },
+                               () => CHARS[(Math.random() * CHARS.length) | 0]),
+                        phase: Math.random() * Math.PI * 2,
+                    }));
+                }
+
+                function resize() {
+                    W = window.innerWidth;
+                    H = window.innerHeight;
+                    canvas.width        = W * DPR;
+                    canvas.height       = H * DPR;
+                    canvas.style.width  = W + 'px';
+                    canvas.style.height = H + 'px';
+                    ctx.scale(DPR, DPR);
+                    initCols();
+                }
+
+                function draw() {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, W, H);
+                    ctx.font = `${FONT}px "JetBrains Mono", monospace`;
+
+                    const mobile = isMobile();
+
+                    for (let i = 0; i < columns.length; i++) {
+                        const col = columns[i];
+                        col.phase += 0.015;
+                        col.pos   += col.speed;
+
+                        if (Math.random() < 0.35) {
+                            const slot = (Math.random() * TRAIL_LEN) | 0;
+                            col.chars[slot] = CHARS[(Math.random() * CHARS.length) | 0];
+                        }
+
+                        const headRow = Math.floor(col.pos);
+                        const x       = i * FONT;
+
+                        for (let t = 0; t < TRAIL_LEN; t++) {
+                            const row = headRow - t;
+                            if (row < 0 || row * FONT > H) continue;
+                            const y       = row * FONT;
+                            const ratio   = t / (TRAIL_LEN - 1);
+                            const opacity = Math.pow(1 - ratio, 2.2);
+
+                            if (t === 0) {
+                                const pulse = 0.82 + 0.12 * Math.sin(col.phase);
+                                if (!mobile) {
+                                    ctx.shadowColor = 'rgba(190, 80, 255, 0.70)';
+                                    ctx.shadowBlur  = HEAD_BLUR;
+                                }
+                                ctx.fillStyle = `rgba(220, 140, 255, ${pulse.toFixed(2)})`;
+                                ctx.fillText(col.chars[0], x, y);
+                                if (!mobile) {
+                                    ctx.shadowBlur  = 0;
+                                    ctx.shadowColor = 'transparent';
+                                }
+                            } else {
+                                ctx.fillStyle = `rgba(160, 60, 240, ${(opacity * 0.75).toFixed(3)})`;
+                                ctx.fillText(col.chars[t], x, y);
+                            }
+                        }
+
+                        if (col.pos * FONT > H + TRAIL_LEN * FONT) {
+                            col.pos   = -(Math.random() * (H / FONT) * 0.6);
+                            col.speed = DROP_SPEED * (0.75 + Math.random() * 0.50);
+                            col.phase = Math.random() * Math.PI * 2;
+                        }
+                    }
+                }
+
+                function loop() { draw(); requestAnimationFrame(loop); }
+
+                resize();
+                loop();
+
+                let resizeTimer;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(resize, 150);
+                }, { passive: true });
+
+            })();
+
+        })();
+    </script>
+
+</body>
+</html>
